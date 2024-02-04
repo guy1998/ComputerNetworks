@@ -11,9 +11,12 @@ import random
 # Then this integer can be converted into a binary string representation
 def generate_random_message(size_in_bytes):
     num_bits = size_in_bytes * 8
-    random_integer = secrets.randbits(num_bits)
-    binary_string = bin(random_integer)[2:]
-    binary_string = binary_string.zfill(num_bits)
+    binary_string = '0'
+    while binary_string[0] != '1':  # makes sure that the message starts with a one
+        # so all the bytes of the message are valid
+        random_integer = secrets.randbits(num_bits)
+        binary_string = bin(random_integer)[2:]
+        binary_string = binary_string.zfill(num_bits)
     return binary_string
 
 

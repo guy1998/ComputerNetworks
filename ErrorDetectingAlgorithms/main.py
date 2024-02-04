@@ -1,4 +1,5 @@
 from crc import crc_experiment
+from checksum import checksum_experiment
 
 if __name__ == "__main__":
-    crc_experiment("1000000000000011", 65536, "x^15+x+1")
+    checksum_experiment(16384, 16)

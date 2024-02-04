@@ -3,43 +3,52 @@ import random
 import pandas as pd
 
 
+def calculating_complement(binary_string):
+    complement = ''
+    for i in binary_string:
+        if i == '1':
+            complement += '0'
+        else:
+            complement += '1'
+    return complement
+
+
 # Function to find the Checksum of Sent Message
 def find_checksum(message, k):
     # Dividing sent message in packets of k bits where k will be 16 or 32
     integer_sum = 0
-    i = 0
-    while k <= len(message):
-        integer_sum += int(message[i:k], 2)
-        i = k
-        k += k
+    i = k
+    while i <= len(message):
+        integer_sum += int(message[i-k:i], 2)
+        if integer_sum > 65535:
+            integer_sum = integer_sum - 65536 + 1
+        i += k
     binary_sum = bin(integer_sum)[2:]
-    if len(binary_sum) > k:
-        x = len(binary_sum) - k
-        binary_sum = bin(int(binary_sum[0:x], 2) + int(binary_sum[x:], 2))[2:]
     if len(binary_sum) < k:
-        binary_sum = '0' * (k - len(binary_sum)) + binary_sum
-    checksum = ''
-    for i in binary_sum:
-        if i == '1':
-            checksum += '0'
-        else:
-            checksum += '1'
-    return checksum
+        binary_sum = '0' * (k - len(binary_sum)) + binary_sum  # zero padding in case number is smaller than k bits
+
+    return calculating_complement(binary_sum)
 
 
 def generate_receiver_checksum(received_message, checksum, k):
-    pass
+    integer_sum = 0
+    i = k
+    while i <= len(received_message):
+        integer_sum += int(received_message[i-k:i], 2)
+        if integer_sum > 65535:
+            integer_sum = integer_sum - 65536 + 1
+        i += k
+    integer_sum = integer_sum + 2 * int(checksum, 2)  # Adding the received checksum
+    if integer_sum > 65535:
+        integer_sum = integer_sum - 65536 + 1
+    binary_sum = bin(integer_sum)[2:]
+    return calculating_complement(binary_sum)
 
 
 def verify_checksum(sender_checksum, receiver_checksum):
     final_sum = bin(int(sender_checksum, 2) + int(receiver_checksum, 2))[2:]
-    final_comp = ''
-    for i in final_sum:
-        if i == '1':
-            final_comp += '0'
-        else:
-            final_comp += '1'
-    return int(final_comp, 2) == 0
+    final_comp = calculating_complement(final_sum)
+    return not (int(final_comp, 2) == 0)
 
 
 def channel_that_employs_checksum(message, checksum_size, error_rate):
@@ -68,7 +77,7 @@ def generate_result_table(path, result_dict, check_sum_size):
 
 
 def checksum_experiment(message_size, check_sum_size):
-    rates = [(0, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30),
+    rates = [(1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30),
              (31, 35), (36, 40), (41, 45), (46, 50), (51, 55), (56, 60), (61, 65), (66, 70)]
     rate_cnt = 0
     result_tracker = {}
@@ -85,4 +94,4 @@ def checksum_experiment(message_size, check_sum_size):
             result_tracker[rates[rate_cnt]] = [result]
         rate_cnt += 1
     generate_result_table("checksum_results/" + str(check_sum_size) + "_bit_checksum/" + str(message_size) + ".csv",
-                          result_tracker, str(check_sum_size))
+                          result_tracker, str(check_sum_size) + "-bits")
